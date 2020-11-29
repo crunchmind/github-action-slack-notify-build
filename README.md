@@ -7,7 +7,7 @@ A [Slack bot token](https://api.slack.com/docs/token-types) is required to use t
 ## Usage
 
 ```yaml
-uses: crunchmind/github-action-slack-notify-build
+uses: crunchmind/github-action-slack-notify-build@v2
 with:
   channel: rnd-github-actions
   status: STARTED
