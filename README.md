@@ -14,8 +14,10 @@ with:
   color: good
   environment: ${{ github.event.inputs.env }}
   stage: ${{ github.event.inputs.stage }}
+  last_commit: true
 env:
   SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 The Slack notification leverages attachments to group important information together and provide valuable links:
@@ -119,24 +121,38 @@ message_id: ${{ steps.<your_first_slack_step_id>.outputs.message_id }}
 
 ### `environment`
 
-The environment input of the deployment. Typically passed using the `inputs` context:
+The environment input of the deployment. It passed using the `inputs` context:
 
 ```yaml
 environment: ${{ github.event.inputs.env }}
 ```
 
+_prod / production environment will be highlighted in slack output automatically._
+
 ### `stage`
 
-The stage input of the deployment. Typically passed using the `inputs` context:
+The stage input of the deployment. It passed using the `inputs` context:
 
 ```yaml
 stage: ${{ github.event.inputs.stage }}
 ```
 
+_prod / production stage will be highlighted in slack output automatically._
+
+### `last_commit`
+
+The last commit of the selected branch. It can be enabled by passing it in the `inputs` context:
+
+```yaml
+last_commit: true
+```
+
+**make sure to add `GITHUB_TOKEN` secret!**
+
 ### `custom_fields`
 
-The additional custom fields you would like to add, you need to build it as insturcted in the [Slack fields guide](https://api.slack.com/legacy/interactive-message-field-guide#attachment_fields) and make sure it was inserted as string (```JSON.stringify(custom_fields)``` might help you with this)
-For example: ```'[{"title": "test", "value": "test", "short": true}]'```
+The additional custom fields you would like to add, you need to build it as insturcted in the [Slack fields guide](https://api.slack.com/legacy/interactive-message-field-guide#attachment_fields) and make sure it was inserted as string (`JSON.stringify(custom_fields)` might help you with this)
+For example: `'[{"title": "test", "value": "test", "short": true}]'`
 
 ## Outputs
 

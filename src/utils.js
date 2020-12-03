@@ -1,11 +1,11 @@
 const { context } = require('@actions/github');
+const { Octokit } = require('@octokit/rest');
 
-function buildSlackAttachments({ status, color, github, environment, stage, custom_fields }) {
+async function buildSlackAttachments({ status, color, github, environment, stage, custom_fields, last_commit }) {
   const { payload, ref, workflow, eventName, actor } = github.context;
   const { owner, repo } = context.repo;
   const event = eventName;
   const branch = event === 'pull_request' ? payload.pull_request.head.ref : ref.replace('refs/heads/', '');
-
   const sha = event === 'pull_request' ? payload.pull_request.head.sha : github.context.sha;
 
   const referenceLink =
@@ -23,6 +23,7 @@ function buildSlackAttachments({ status, color, github, environment, stage, cust
 
   let slackAttachments = [
     {
+      mrkdwn_in: ['fields'],
       color,
       fields: [
         {
@@ -54,6 +55,7 @@ function buildSlackAttachments({ status, color, github, environment, stage, cust
   ];
 
   if (environment) {
+    environment = highlight_prod(environment);
     slackAttachments[0].fields.push({
       title: 'Environment',
       value: environment,
@@ -62,10 +64,22 @@ function buildSlackAttachments({ status, color, github, environment, stage, cust
   }
 
   if (stage) {
+    stage = highlight_prod(stage);
     slackAttachments[0].fields.push({
       title: 'Stage',
       value: stage,
       short: true,
+    });
+  }
+
+  if (last_commit === 'true') {
+    await get_last_commit_message(owner, repo, sha).then(response => {
+      let last_commit_message = response.data.message;
+      slackAttachments[0].fields.push({
+        title: 'Last Commit Message',
+        value: last_commit_message,
+        short: false,
+      });
     });
   }
 
@@ -80,6 +94,23 @@ module.exports.buildSlackAttachments = buildSlackAttachments;
 
 function formatChannelName(channel) {
   return channel.replace(/[#@]/g, '');
+}
+
+function highlight_prod(text) {
+  if (['prod', 'production'].includes(text)) {
+    text = `\`${text}\``;
+  }
+
+  return text;
+}
+
+async function get_last_commit_message(owner, repo, commit_sha) {
+  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+  return await octokit.git.getCommit({
+    owner,
+    repo,
+    commit_sha,
+  });
 }
 
 module.exports.formatChannelName = formatChannelName;
